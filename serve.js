@@ -58,6 +58,28 @@ $ns at 0.2 "$cbr1 start"
 $ns at 1.0 "finish"
 
 $ns run
+
+
+
+
+BEGIN {
+dcount = 0;
+rcount = 0;
+}
+{
+event = $1;
+if(event == "d")
+dcount++;
+if(event == "r")
+rcount++;
+}
+END {
+printf("The no.of packets dropped : %d\n", dcount);
+printf("The no.of packets received : %d\n", rcount);
+}
+
+
+
 `;
 const info2 = `
 set ns [new Simulator]
@@ -128,6 +150,20 @@ $ns at 5.0 "finish"
 
 $ns run
 
+
+
+BEGIN {
+ count = 0;
+ }
+{
+event = $1;
+ if (event == "d") {
+ count++;
+ }
+}
+END {
+ printf("Number of packets dropped : %d\n", count);
+}
 `;
 const info3 = `
 
@@ -212,6 +248,18 @@ $ns at 5.0 "$ftp1 stop"
 $ns at 5.5 "finish"
 
 $ns run
+
+
+
+BEGIN {
+}
+{
+ if ($6 == "cwnd_") {
+ printf("%f\t%f\n", $1, $7);
+ }
+}
+END {
+}
 `;
 const info4 = `
   
