@@ -5,216 +5,288 @@ const cors = require('cors');
 app.use(cors());
 // Example GET route: /get-letter?filename=example.jpg
 const info1 = `
-class State:
-    def __init__(self, jug1, jug2):
-        self.jug1 = jug1
-        self.jug2 = jug2
+!pip install gensim scipy
 
-    def __eq__(self, other):
-        return self.jug1 == other.jug1 and self.jug2 == other.jug2
+import gensim.downloader as api
+from scipy.spatial.distance import cosine
 
-    def __hash__(self):
-        return hash((self.jug1, self.jug2))
+print("Loading Word2Vec model...")
+model = api.load("word2vec-google-news-300")
+print("Model loaded successfully.\n")
 
-    def __str__(self):
-        return f"({self.jug1}, {self.jug2})"
+vector = model['king']
 
+print("First 10 dimensions of 'king' vector:")
+print(vector[:10], "\n")
 
-class Node:
-    def __init__(self, state, parent=None):
-        self.state = state
-        self.parent = parent
+print("Top 10 words most similar to 'king':")
+for word, similarity in model.most_similar('king'):
+    print(f"{word}: {similarity:.4f}")
+print()
 
-    def path(self):
-        if self.parent is None:
-            return [self.state]
-        else:
-            return self.parent.path() + [self.state]
+result = model.most_similar(positive=['king', 'woman'], negative=['man'], topn=1)
+print("Analogy - 'king' - 'man' + 'woman' ≈ ?")
+print(f"Result: {result[0][0]} (Similarity: {result[0][1]:.4f})\n")
 
+print("Analogy - 'paris' + 'italy' - 'france' ≈ ?")
+for word, similarity in model.most_similar(positive=['paris', 'italy'], negative=['france']):
+    print(f"{word}: {similarity:.4f}")
+print()
 
-def dfs(start_state, goal):
-    visited = set()
-    stack = [Node(start_state)]
+print("Analogy - 'walking' + 'swimming' - 'walk' ≈ ?")
+for word, similarity in model.most_similar(positive=['walking', 'swimming'], negative=['walk']):
+    print(f"{word}: {similarity:.4f}")
+print()
 
-    while stack:
-        node = stack.pop()
-        state = node.state
+similarity = 1 - cosine(model['king'], model['queen'])
+print(f"Cosine similarity between 'king' and 'queen': {similarity:.4f}")
 
-        if state == goal:
-            return node.path()
+def explore_word_relationships(word1, word2, word3):
+    print(f"Relationship between '{word1}', '{word2}', and '{word3}':")
+    result = model.most_similar(positive=[word2, word3], negative=[word1], topn=1)
+    print(f"Result: {result[0][0]} (Similarity: {result[0][1]:.4f})\n")
+    return result
 
-        visited.add(state)
+explore_word_relationships("king", "man", "woman")
+explore_word_relationships("paris", "france", "germany")
+explore_word_relationships("apple", "fruit", "carrot")
 
-        actions = [
-            (state.jug1, 4),  # Fill Jug2
-            (4, state.jug2),  # Fill Jug1
-            (0, state.jug2),  # Empty Jug1
-            (state.jug1, 0),  # Empty Jug2
-            (min(state.jug1 + state.jug2, 4), max(0, state.jug1 + state.jug2 - 4)),  # Pour Jug1 -> Jug2
-            (max(0, state.jug1 + state.jug2 - 3), min(state.jug1 + state.jug2, 3))   # Pour Jug2 -> Jug1
-        ]
+def analyze_similarity(word1, word2):
+    similarity = 1 - cosine(model[word1], model[word2])
+    print(f"Similarity between '{word1}' and '{word2}': {similarity:.4f}")
 
-        for action in actions:
-            new_state = State(action[0], action[1])
-            if new_state not in visited:
-                stack.append(Node(new_state, node))
+analyze_similarity("cat", "dog")
+analyze_similarity("computer", "keyboard")
+analyze_similarity("music", "art")
 
-    return None
+def find_most_similar(word):
+    similar_words = model.most_similar(word, topn=5)
+    print(f"Top 5 similar words to '{word}':")
+    for similar_word in similar_words:
+        print(f"{similar_word[0]}: {similar_word[1]:.4f}")
 
-
-# Test the algorithm with an example
-start_state = State(0, 0)     # Initial state: both jugs are empty
-goal_state = State(2, 0)      # Goal state: jug1 has 2 units of water
-
-print("Starting DFS for Water Jug Problem...")
-path = dfs(start_state, goal_state)
-
-if path:
-    print("Solution found! Steps to reach the goal:")
-    for i, state in enumerate(path):
-        print(f"Step {i}: Jug1: {state.jug1}, Jug2: {state.jug2}")
-else:
-    print("No solution found!")
+find_most_similar("happy")
+print("\n")
+find_most_similar("sad")
+print("\n")
+find_most_similar("technology")
 `;
 const info2 = `
-from queue import PriorityQueue
+!pip install gensim numpy matplotlib scikit-learn
 
-# State representation: (left_missionaries, left_cannibals, boat_position)
-INITIAL_STATE = (3, 3, 1)
-GOAL_STATE = (0, 0, 0)
+import gensim.downloader as api
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
 
-def is_valid_state(state):
-    left_m, left_c, _ = state
-    right_m = 3 - left_m
-    right_c = 3 - left_c
+print("Loading pre-trained word vectors...")
+wv = api.load("word2vec-google-news-300")
+print("Model loaded successfully.")
 
-    # Missionaries can't be outnumbered by cannibals on either side
-    if (left_m > 0 and left_c > left_m) or (right_m > 0 and right_c > right_m):
-        return False
-    return True
+try:
+    vec = wv["king"] - wv["man"] + wv["woman"]
+    sims = [(word, sim) for word, sim in wv.similar_by_vector(vec, topn=10) if word not in {"king","man","woman"}]
+    print("\nWord Relationship: king - man + woman => Most similar words:")
+    for word, sim in sims[:5]:
+        print(f"{word}: {sim:.4f}")
+except KeyError as e:
+    print(f"Error: {e} not in vocabulary")
 
-def generate_next_states(state):
-    next_states = []
-    left_m, left_c, boat_pos = state
-    new_boat_pos = 1 - boat_pos
+words = ["king", "man", "woman", "queen", "prince", "princess", "royal", "throne"]
+words += [w for w, _ in sims[:5]]
+vectors = np.array([wv[w] for w in words])
 
-    for m in range(3):
-        for c in range(3):
-            if 1 <= m + c <= 2:
-                if boat_pos == 1:
-                    new_left_m = left_m - m
-                    new_left_c = left_c - c
-                else:
-                    new_left_m = left_m + m
-                    new_left_c = left_c + c
+pca = PCA(n_components=2)
+reduced_pca = pca.fit_transform(vectors)
+plt.figure(figsize=(10, 8))
+for i, word in enumerate(words):
+    plt.scatter(*reduced_pca[i], color='blue')
+    plt.text(reduced_pca[i,0]+0.02, reduced_pca[i,1]+0.02, word, fontsize=12)
+plt.title("Word Embeddings Visualization (PCA)")
+plt.grid(True)
+plt.show()
 
-                new_state = (new_left_m, new_left_c, new_boat_pos)
-                if 0 <= new_left_m <= 3 and 0 <= new_left_c <= 3 and is_valid_state(new_state):
-                    next_states.append(new_state)
-    return next_states
+tsne = TSNE(n_components=2, random_state=42, perplexity=3)
+reduced_tsne = tsne.fit_transform(vectors)
+plt.figure(figsize=(10, 8))
+for i, word in enumerate(words):
+    plt.scatter(*reduced_tsne[i], color='blue')
+    plt.text(reduced_tsne[i,0]+0.02, reduced_tsne[i,1]+0.02, word, fontsize=12)
+plt.title("Word Embeddings Visualization (t-SNE)")
+plt.grid(True)
+plt.show()
 
-def bfs():
-    frontier = PriorityQueue()
-    frontier.put((0, INITIAL_STATE))
-    came_from = {}
-    cost_so_far = {INITIAL_STATE: 0}
+import gensim.downloader as api
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
 
-    while not frontier.empty():
-        _, current_state = frontier.get()
-        if current_state == GOAL_STATE:
-            break
+model = api.load("word2vec-google-news-300")
 
-        for next_state in generate_next_states(current_state):
-            new_cost = cost_so_far[current_state] + 1
-            if next_state not in cost_so_far or new_cost < cost_so_far[next_state]:
-                cost_so_far[next_state] = new_cost
-                frontier.put((new_cost, next_state))
-                came_from[next_state] = current_state
+words = ['computer', 'internet', 'software', 'hardware', 'keyboard', 'mouse', 'server', 'network', 'programming', 'database']
+vectors = [model[word] for word in words]
 
-    # Reconstruct path
-    current_state = GOAL_STATE
-    path = [current_state]
-    while current_state != INITIAL_STATE:
-        current_state = came_from[current_state]
-        path.append(current_state)
-    path.reverse()
-    return path
+pca = PCA(n_components=2)
+reduced = pca.fit_transform(vectors)
 
-def print_path(path):
-    for i, state in enumerate(path):
-        left_m, left_c, boat_pos = state
-        right_m = 3 - left_m
-        right_c = 3 - left_c
-        print(f"Step {i}: ({left_m}M, {left_c}C, {'left' if boat_pos == 1 else 'right'}) "
-              f"-> ({right_m}M, {right_c}C, {'right' if boat_pos == 1 else 'left'})")
+input_word = 'computer'
+similar_words = model.most_similar(input_word, topn=5)
 
-if __name__ == "__main__":
-    path = bfs()
-    print("Solution path:")
-    print_path(path)
+print(f"Top 5 words similar to '{input_word}':")
+for word, score in similar_words:
+    print(f"{word}: {score:.4f}")
+
+plt.figure(figsize=(8, 6))
+for i, word in enumerate(words):
+    plt.scatter(reduced[i, 0], reduced[i, 1])
+    plt.annotate(word, (reduced[i, 0], reduced[i, 1]))
+plt.title("PCA Visualization of Technology Word Embeddings")
+plt.xlabel("PC1")
+plt.ylabel("PC2")
+plt.grid(True)
+
+plt.show()
 `;
 const info3 = `
-import heapq
+!pip install gensim matplotlib scikit-learn
 
-def astar(start, goal, neighbors, h):
-    class Node:
-        def __init__(self, s, p=None, g=0): self.s, self.p, self.g = s, p, g
-        def f(self): return self.g + h(self.s)
+import matplotlib.pyplot as plt
+from sklearn.manifold import TSNE
+import numpy as np
+from gensim.models import Word2Vec
 
-    open_set = [(h(start), id(start), Node(start))]
-    closed = set()
+medical_corpus = [
+"The patient was diagnosed with diabetes and hypertension.",
+"MRI scans reveal abnormalities in the brain tissue.",
+"The treatment involves antibiotics and regular monitoring.",
+"Symptoms include fever, fatigue, and muscle pain.",
+"The vaccine is effective against several viral infections.",
+"Doctors recommend physical therapy for recovery.",
+"The clinical trial results were published in the journal.",
+"The surgeon performed a minimally invasive procedure.",
+"The prescription includes pain relievers and anti-inflammatory drugs.",
+"The diagnosis confirmed a rare genetic disorder."
+]
 
-    while open_set:
-        _, _, curr = heapq.heappop(open_set)
-        if curr.s == goal:
-            path = []
-            while curr: path.append(curr.s); curr = curr.p
-            return path[::-1]
-        closed.add(curr.s)
-        for ns in neighbors(curr.s):
-            if ns in closed: continue
-            n = Node(ns, curr, curr.g + 1)
-            if any(ns == x.s for _, _, x in open_set): continue
-            heapq.heappush(open_set, (n.f(), id(n), n))
-    return None
+processed_corpus = [sentence.lower().split() for sentence in medical_corpus]
 
-neighbors = lambda s: [(s[0]+dx, s[1]+dy) for dx, dy in [(0,1),(0,-1),(1,0),(-1,0)]]
-heuristic = lambda s: abs(4 - s[0]) + abs(4 - s[1])
 
-path = astar((0, 0), (4, 4), neighbors, heuristic)
-print("Path:", path)
-`;
+model = Word2Vec(sentences=processed_corpus, vector_size=100, window=5, min_count=1,workers=4, epochs=50)
+
+
+words = list(model.wv.index_to_key) # List of words in the vocabulary
+embeddings = np.array([model.wv[word] for word in words]) # Word embeddings for each word
+
+tsne = TSNE(n_components=2, random_state=42, perplexity=5)
+tsne_result = tsne.fit_transform(embeddings)
+
+plt.figure(figsize=(10, 8))
+plt.scatter(tsne_result[:, 0], tsne_result[:, 1], color="blue")
+
+for i, word in enumerate(words):
+    plt.text(tsne_result[i, 0] + 0.02, tsne_result[i, 1] + 0.02, word, fontsize=12)
+plt.title("Word Embeddings Visualization (Medical Domain)")
+plt.xlabel("Dimension 1")
+plt.ylabel("Dimension 2")
+plt.grid(True)
+plt.show()
+
+
+def find_similar_words(input_word, top_n=5):
+    try:
+        similar_words = model.wv.most_similar(input_word, topn=top_n)
+        print(f"Words similar to '{input_word}':")
+        for word, similarity in similar_words:
+            print(f" {word} ({similarity:.2f})")
+    except KeyError:
+        print(f"'{input_word}' not found in vocabulary.")
+
+find_similar_words("treatment")
+find_similar_words("vaccine")`;
 const info4 = `
-import heapq
+!pip install gensim matplotlib scikit-learn
 
-def astar(start, goal, neighbors, h):
-    class Node:
-        def __init__(self, s, p=None, g=0): self.s, self.p, self.g = s, p, g
-        def f(self): return self.g + h(self.s)
+import gensim.downloader as api
+from transformers import pipeline
+import nltk
+import string
+from nltk.tokenize import word_tokenize
 
-    open_set = [(h(start), id(start), Node(start))]
-    closed = set()
+nltk.download('punkt')
 
-    while open_set:
-        _, _, curr = heapq.heappop(open_set)
-        if curr.s == goal:
-            path = []
-            while curr: path.append(curr.s); curr = curr.p
-            return path[::-1]
-        closed.add(curr.s)
-        for ns in neighbors(curr.s):
-            if ns in closed: continue
-            n = Node(ns, curr, curr.g + 1)
-            if any(ns == x.s for _, _, x in open_set): continue
-            heapq.heappush(open_set, (n.f(), id(n), n))
+print("Loading pre-trained word vectors...")
+word_vectors = api.load("glove-wiki-gigaword-100")
+
+import gensim.downloader as api
+from transformers import pipeline
+import nltk
+import string
+from nltk.tokenize import word_tokenize
+nltk.download('punkt')
+nltk.download('punkt_tab')
+print("Loading pre-trained word vectors...")
+word_vectors = api.load("glove-wiki-gigaword-100")
+
+def replace_keyword_in_prompt(prompt, keyword, word_vectors, topn=1):
+    """
+ Replace only the specified keyword in the prompt with its most similar word.
+ Args:
+ prompt (str): The original input prompt.
+ keyword (str): The word to be replaced with a similar word.
+ word_vectors (gensim.models.KeyedVectors): Pre-trained word embeddings.
+ topn (int): Number of top similar words to consider (default: 1).
+ Returns:
+    str: The enriched prompt with the keyword replaced.
+    """
+    words = word_tokenize(prompt)
+    enriched_words = []
+    for word in words:
+        cleaned_word = word.lower().strip(string.punctuation)
+        if cleaned_word == keyword.lower():
+        try:
+            similar_words = word_vectors.most_similar(cleaned_word, topn=topn)
+            if similar_words:
+                replacement_word = similar_words[0][0]
+                print(f"Replacing '{word}' → '{replacement_word}'")
+                enriched_words.append(replacement_word)
+                continue
+        except KeyError:
+            print(f"'{keyword}' not found in the vocabulary. Using original word.")
+        enriched_words.append(word)
+    enriched_prompt = " ".join(enriched_words)
+    print(f"\n Enriched Prompt: {enriched_prompt}")
+    return enriched_prompt
+
+print("\nLoading GPT-2 model...")
+generator = pipeline("text-generation", model="gpt2")
+
+def generate_response(prompt, max_length=100):
+  try:
+    response = generator(prompt, max_length=max_length, num_return_sequences=1)
+    return response[0]['generated_text']
+  except Exception as e:
+    print(f"Error generating response: {e}")
     return None
 
-neighbors = lambda s: [(s[0]+dx, s[1]+dy) for dx, dy in [(0,1),(0,-1),(1,0),(-1,0)]]
-heuristic = lambda s: abs(4 - s[0]) + abs(4 - s[1])
+original_prompt = "Who is king."
+print(f"\n Original Prompt: {original_prompt}")
+key_term = "king"
+enriched_prompt = replace_keyword_in_prompt(original_prompt, key_term, word_vectors)
 
-path = astar((0, 0), (4, 4), neighbors, heuristic)
-print("Path:", path)
-`;
+print("\nGenerating response for the original prompt...")
+original_response = generate_response(original_prompt)
+print("\nOriginal Prompt Response:")
+print(original_response)
+print("\nGenerating response for the enriched prompt...")
+enriched_response = generate_response(enriched_prompt)
+print("\nEnriched Prompt Response:")
+print(enriched_response)
+
+print("\n🔍 Comparison of Responses:")
+print("Original Prompt Response Length:", len(original_response))
+print("Enriched Prompt Response Length:", len(enriched_response))
+print("Original Prompt Sentence Count:", original_response.count("."))
+print("Enriched Prompt Sentence Count:", enriched_response.count("."))`;
 const info5 = `
 def is_safe(board, row, col):
     for i in range(row):
