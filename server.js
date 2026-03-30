@@ -288,45 +288,28 @@ print("Enriched Prompt Response Length:", len(enriched_response))
 print("Original Prompt Sentence Count:", original_response.count("."))
 print("Enriched Prompt Sentence Count:", enriched_response.count("."))`;
 const info5 = `
-def is_safe(board, row, col):
-    for i in range(row):
-        if board[i] == col:
-            return False
-    for i, j in zip(range(row-1, -1, -1), range(col-1, -1, -1)):
-        if board[i] == j:
-            return False
-    for i, j in zip(range(row-1, -1, -1), range(col+1, 8)):
-        if board[i] == j:
-            return False
-    return True
-
-def solve_queens_util(board, row):
-    if row >= 8:
-        return True
-    for col in range(8):
-        if is_safe(board, row, col):
-            board[row] = col
-            if solve_queens_util(board, row + 1):
-                return True
-            board[row] = -1
-    return False
-
-def solve_queens():
-    board = [-1] * 8
-    if not solve_queens_util(board, 0):
-        print("Solution does not exist")
-        return False
-    print("Solution:")
-    for i in range(8):
-        for j in range(8):
-            if board[i] == j:
-                print("Q", end=" ")
-            else:
-                print(".", end=" ")
-        print()
-    return True
-
-solve_queens()
+5]import gensim.downloader as api
+import random
+model = api.load("glove-wiki-gigaword-100")
+def generate_similar_words(seed_word, topn=10):
+    if seed_word in model:
+        return [word for word, _ in model.most_similar(seed_word, topn=topn)]
+    else:
+        return []
+def create_paragraph(seed_word):
+    similar_words = generate_similar_words(seed_word, topn=10)
+    if not similar_words:
+        return f"No similar words found for '{seed_word}'."
+    random.shuffle(similar_words)
+    selected_words = similar_words[:5]
+    paragraph = f"In a world defined by {seed_word}, "
+    paragraph += f"people found themselves surrounded by concepts like {', '.join(selected_words[:-1])}, and {selected_words[-1]}. "
+    paragraph += f"These ideas shaped the way they thought, acted, and dreamed. "
+    paragraph += f"Every step forward in their journey reflected the essence of '{seed_word}', "
+    paragraph += f"bringing them closer to understanding the true meaning of {selected_words[0]}."
+    return paragraph
+seed = "freedom"
+print(create_paragraph(seed))
 `;
 const info6 = `
 import numpy as np
