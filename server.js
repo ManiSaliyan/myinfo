@@ -312,39 +312,26 @@ seed = "freedom"
 print(create_paragraph(seed))
 `;
 const info6 = `
-import numpy as np
+pip install transformers torch
 
-def tsp_nearest_neighbor(distances):
-    num_cities = distances.shape[0]
-    visited = [False] * num_cities
-    tour = []
-    current_city = 0
-    tour.append(current_city)
-    visited[current_city] = True
+from transformers import pipeline
 
-    for _ in range(num_cities - 1):
-        nearest_city = None
-        nearest_distance = float('inf')
-        for next_city in range(num_cities):
-            if not visited[next_city] and distances[current_city, next_city] < nearest_distance:
-                nearest_city = next_city
-                nearest_distance = distances[current_city, next_city]
-        current_city = nearest_city
-        tour.append(current_city)
-        visited[current_city] = True
+sentiment_pipeline = pipeline("sentiment-analysis")
 
-    tour.append(tour[0])  # Return to starting city
-    return tour
+input_sentences = [
+ "The new phone I bought is absolutely amazing!",
+ "Worst customer service ever. I'm never coming back.",
+ "The experience was average, nothing special.",
+ "Fast delivery and the packaging was perfect.",
+ "The product broke within two days. Very disappointed."
+]
 
-if __name__ == "__main__":
-    distances = np.array([
-        [0, 10, 15, 20],
-        [10, 0, 35, 25],
-        [15, 35, 0, 30],
-        [20, 25, 30, 0]
-    ])
-    tour = tsp_nearest_neighbor(distances)
-    print("Tour:", tour)
+results = sentiment_pipeline(input_sentences)
+
+print("Sentiment Analysis Results:\n")
+for sentence, result in zip(input_sentences, results):
+ print(f"Input Sentence: {sentence}")
+ print(f"Predicted Sentiment: {result['label']}, Confidence Score: {result['score']:.2f}\n")
 `;
 const info7 = `
 class KnowledgeBase:
