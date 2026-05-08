@@ -549,6 +549,330 @@ app.get('/info9', (req, res) => {
   res.send(info9);   // return the Python code
 });
 
+const ml6= `
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.datasets import make_regression
+from sklearn.metrics import mean_squared_error
+
+np.random.seed(42)
+
+X, y = make_regression(n_samples=100, n_features=1, noise=10, random_state=42)
+
+y = y + 10 * np.sin(X[:, 0] * 2)
+
+plt.scatter(X, y, color='blue', label='Data Points')
+plt.title("Synthetic Dataset")
+plt.xlabel("Feature (X)")
+plt.ylabel("Target (y)")
+plt.legend()
+plt.show()
+
+def locally_weighted_regression(X, y, query_point, tau=0.1):
+    weights = np.exp(-np.sum((X - query_point) ** 2, axis=1) / (2 * tau ** 2))
+
+    X_bias = np.c_[np.ones(X.shape[0]), X]
+
+    W = np.diag(weights)
+
+    theta = np.linalg.inv(X_bias.T @ W @ X_bias) @ (X_bias.T @ W @ y)
+
+    query_point_bias = np.array([1, query_point[0]])
+
+    y_pred = query_point_bias @ theta
+
+    return y_pred
+
+def predict_lwr(X_train, y_train, X_test, tau=0.1):
+    y_pred = np.zeros(X_test.shape[0])
+
+    for i, query_point in enumerate(X_test):
+        y_pred[i] = locally_weighted_regression(X_train, y_train, query_point, tau)
+
+    return y_pred
+
+X_test = np.linspace(X.min(), X.max(), 100).reshape(-1, 1)
+
+tau = 0.1
+
+y_pred = predict_lwr(X, y, X_test, tau)
+
+plt.scatter(X, y, color='blue', label='Data Points')
+plt.plot(X_test, y_pred, color='red', label='LWR Fit')
+plt.title(f"Locally Weighted Regression (tau={tau})")
+plt.xlabel("Feature (X)")
+plt.ylabel("Target (y)")
+plt.legend()
+plt.show()
+
+mse = mean_squared_error(y, predict_lwr(X, y, X, tau))
+
+print(f"Mean Squared Error (MSE) on Training Data: {mse:.4f}")
+`
+
+const ml7 = `
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+
+boston_df = pd.read_csv("boston_housing_data.csv")
+
+print("Linear Regression on Boston Housing Dataset")
+
+X = boston_df[['RM']]
+y = boston_df['MEDV']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+LR_model = LinearRegression()
+
+LR_model.fit(X_train, y_train)
+
+y_pred = LR_model.predict(X_test)
+
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+
+print(f"Mean Squared Error: {mse:.4f}")
+print(f"R^2 Score: {r2:.4f}")
+
+plt.scatter(X_test, y_test, color='green', label='Actual')
+plt.plot(X_test, y_pred, color='red', label='Predicted')
+
+plt.xlabel('Average Number of Rooms (RM)')
+plt.ylabel('House Price (MEDV)')
+plt.title('Linear Regression on Boston Housing Dataset')
+
+plt.legend()
+plt.show()
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+
+auto_df = pd.read_csv("auto-mpg.csv")
+
+print("Polynomial Regression on Auto MPG Dataset")
+
+auto_df['horsepower'] = auto_df['horsepower'].replace('?', np.nan).astype(float)
+
+auto_df.dropna(inplace=True)
+
+X = auto_df[['horsepower']]
+y = auto_df['mpg']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+poly = PolynomialFeatures(degree=2)
+
+X_train_poly = poly.fit_transform(X_train)
+X_test_poly = poly.transform(X_test)
+
+PR_model = LinearRegression()
+
+PR_model.fit(X_train_poly, y_train)
+
+y_pred = PR_model.predict(X_test_poly)
+
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+
+print(f"Mean Squared Error: {mse:.4f}")
+print(f"R^2 Score: {r2:.4f}")
+
+plt.scatter(X_test, y_test, color='purple', label='Actual')
+
+sorted_indices = X_test.squeeze().argsort()
+
+plt.plot(X_test.iloc[sorted_indices], y_pred[sorted_indices], color='red', label='Predicted')
+
+plt.xlabel('Horsepower')
+plt.ylabel('MPG (Miles Per Gallon)')
+plt.title('Polynomial Regression on Auto MPG Dataset')
+
+plt.legend()
+plt.show()
+`
+
+const ml8 = `
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+
+data = sns.load_dataset('titanic')
+
+print(data.head())
+print(data.info())
+
+features = ['pclass', 'sex', 'age', 'sibsp', 'parch', 'fare', 'embarked']
+
+data = data[features + ['survived']].dropna()
+
+data['sex'] = data['sex'].map({'male': 0, 'female': 1})
+data['embarked'] = data['embarked'].map({'C': 0, 'Q': 1, 'S': 2})
+
+X = data[features]
+y = data['survived']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+clf = DecisionTreeClassifier(criterion='gini', max_depth=4, min_samples_split=2, random_state=42)
+
+clf.fit(X_train, y_train)
+
+plt.figure(figsize=(20, 10))
+
+plot_tree(clf, feature_names=features, class_names=['Not Survived', 'Survived'], filled=True)
+
+plt.title("Decision Tree for Titanic Dataset")
+
+plt.show()
+
+y_pred = clf.predict(X_test)
+
+print(f"Accuracy: {accuracy_score(y_test, y_pred):.2f}")
+print(f"Precision: {precision_score(y_test, y_pred):.2f}")
+print(f"Recall: {recall_score(y_test, y_pred):.2f}")
+print(f"F1 Score: {f1_score(y_test, y_pred):.2f}")
+`
+
+const ml9 = `
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+iris = load_iris()
+
+X = iris.data
+y = iris.target
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+model = GaussianNB()
+
+model.fit(X_train, y_train)
+
+y_pred = model.predict(X_test)
+
+accuracy = accuracy_score(y_test, y_pred)
+
+print(f"Accuracy of the Naive Bayes classifier: {accuracy:.4f}")
+
+print("Classification Report:")
+
+print(classification_report(y_test, y_pred, target_names=iris.target_names))
+
+cm = confusion_matrix(y_test, y_pred)
+
+plt.figure(figsize=(4, 3))
+
+sns.heatmap(cm, annot=True, fmt='d', cmap='Reds', xticklabels=iris.target_names, yticklabels=iris.target_names)
+
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
+plt.title('Confusion Matrix')
+
+plt.show()
+`
+
+const ml10 = `
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.datasets import load_breast_cancer
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import silhouette_score, adjusted_rand_score
+
+data = load_breast_cancer()
+
+X = pd.DataFrame(data.data, columns=data.feature_names)
+y_true = data.target
+
+scaler = StandardScaler()
+
+X_scaled = scaler.fit_transform(X)
+
+kmeans = KMeans(n_clusters=2, random_state=42)
+
+y_kmeans = kmeans.fit_predict(X_scaled)
+
+silhouette_avg = silhouette_score(X_scaled, y_kmeans)
+ari_score = adjusted_rand_score(y_true, y_kmeans)
+
+print(f"Silhouette Score: {silhouette_avg:.3f}")
+print(f"Adjusted Rand Index: {ari_score:.3f}")
+
+pca = PCA(n_components=2)
+
+X_pca = pca.fit_transform(X_scaled)
+
+plt.figure(figsize=(8, 4))
+
+sns.scatterplot(x=X_pca[:, 0], y=X_pca[:, 1], hue=y_kmeans, palette="coolwarm", s=60)
+
+plt.title('K-Means Clustering Result (PCA-reduced data)')
+plt.xlabel('PCA Component 1')
+plt.ylabel('PCA Component 2')
+
+plt.legend(title="Cluster")
+
+plt.grid(True)
+
+plt.show()
+
+plt.figure(figsize=(8, 4))
+
+sns.scatterplot(x=X_pca[:, 0], y=X_pca[:, 1], hue=y_true, palette="Set2", s=60)
+
+plt.title('True Labels (PCA-reduced data)')
+plt.xlabel('PCA Component 1')
+plt.ylabel('PCA Component 2')
+
+plt.legend(title="Actual Class")
+
+plt.grid(True)
+
+plt.show()
+`
+
+app.get('/ml6', (req, res) => {
+  res.type('text/plain'); // set content type as plain text
+  res.send(ml6);   // return the Python code
+});
+app.get('/ml7', (req, res) => {
+  res.type('text/plain'); // set content type as plain text
+  res.send(ml7);   // return the Python code
+});
+app.get('/ml8', (req, res) => {
+  res.type('text/plain'); // set content type as plain text
+  res.send(ml8);   // return the Python code
+});
+app.get('/ml9', (req, res) => {
+  res.type('text/plain'); // set content type as plain text
+  res.send(ml9);   // return the Python code
+});
+app.get('/ml10', (req, res) => {
+  res.type('text/plain'); // set content type as plain text
+  res.send(ml10);   // return the Python code
+});
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });
