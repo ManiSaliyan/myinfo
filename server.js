@@ -573,7 +573,7 @@ plt.show()
 mse = mean_squared_error(y, predict_lwr(X, y, X, tau))
 
 print(f"Mean Squared Error (MSE) on Training Data: {mse:.4f}")
-`
+`;
 
 const ml7 = `
 import numpy as np
@@ -664,7 +664,7 @@ plt.title('Polynomial Regression on Auto MPG Dataset')
 
 plt.legend()
 plt.show()
-`
+`;
 
 const ml8 = `
 import seaborn as sns
@@ -708,7 +708,7 @@ print(f"Accuracy: {accuracy_score(y_test, y_pred):.2f}")
 print(f"Precision: {precision_score(y_test, y_pred):.2f}")
 print(f"Recall: {recall_score(y_test, y_pred):.2f}")
 print(f"F1 Score: {f1_score(y_test, y_pred):.2f}")
-`
+`;
 
 const ml9 = `
 import pandas as pd
@@ -752,7 +752,7 @@ plt.ylabel('Actual')
 plt.title('Confusion Matrix')
 
 plt.show()
-`
+`;
 
 const ml10 = `
 import pandas as pd
@@ -816,7 +816,7 @@ plt.legend(title="Actual Class")
 plt.grid(True)
 
 plt.show()
-`
+`;
 app.get('/info1', (req, res) => {
   res.type('text/plain'); // set content type as plain text
   res.send(info1);   // return the Python code
