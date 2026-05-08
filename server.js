@@ -512,42 +512,7 @@ def main():
 if __name__ == "__main__":
     main()
 `;
-app.get('/info1', (req, res) => {
-  res.type('text/plain'); // set content type as plain text
-  res.send(info1);   // return the Python code
-});
-app.get('/info2', (req, res) => {
-  res.type('text/plain'); // set content type as plain text
-  res.send(info2);   // return the Python code
-});
-app.get('/info3', (req, res) => {
-  res.type('text/plain'); // set content type as plain text
-  res.send(info3);   // return the Python code
-});
-app.get('/info4', (req, res) => {
-  res.type('text/plain'); // set content type as plain text
-  res.send(info4);   // return the Python code
-});
-app.get('/info5', (req, res) => {
-  res.type('text/plain'); // set content type as plain text
-  res.send(info5);   // return the Python code
-});
-app.get('/info6', (req, res) => {
-  res.type('text/plain'); // set content type as plain text
-  res.send(info6);   // return the Python code
-});
-app.get('/info7', (req, res) => {
-  res.type('text/plain'); // set content type as plain text
-  res.send(info7);   // return the Python code
-});
-app.get('/info8', (req, res) => {
-  res.type('text/plain'); // set content type as plain text
-  res.send(info8);   // return the Python code
-});
-app.get('/info9', (req, res) => {
-  res.type('text/plain'); // set content type as plain text
-  res.send(info9);   // return the Python code
-});
+
 
 const ml6= `
 import numpy as np
@@ -852,7 +817,42 @@ plt.grid(True)
 
 plt.show()
 `
-
+app.get('/info1', (req, res) => {
+  res.type('text/plain'); // set content type as plain text
+  res.send(info1);   // return the Python code
+});
+app.get('/info2', (req, res) => {
+  res.type('text/plain'); // set content type as plain text
+  res.send(info2);   // return the Python code
+});
+app.get('/info3', (req, res) => {
+  res.type('text/plain'); // set content type as plain text
+  res.send(info3);   // return the Python code
+});
+app.get('/info4', (req, res) => {
+  res.type('text/plain'); // set content type as plain text
+  res.send(info4);   // return the Python code
+});
+app.get('/info5', (req, res) => {
+  res.type('text/plain'); // set content type as plain text
+  res.send(info5);   // return the Python code
+});
+app.get('/info6', (req, res) => {
+  res.type('text/plain'); // set content type as plain text
+  res.send(info6);   // return the Python code
+});
+app.get('/info7', (req, res) => {
+  res.type('text/plain'); // set content type as plain text
+  res.send(info7);   // return the Python code
+});
+app.get('/info8', (req, res) => {
+  res.type('text/plain'); // set content type as plain text
+  res.send(info8);   // return the Python code
+});
+app.get('/info9', (req, res) => {
+  res.type('text/plain'); // set content type as plain text
+  res.send(info9);   // return the Python code
+});
 app.get('/ml6', (req, res) => {
   res.type('text/plain'); // set content type as plain text
   res.send(ml6);   // return the Python code
