@@ -974,19 +974,20 @@ app.get('/info9', (req, res) => {
 });
 app.get('/ml1', (req, res) => {
   res.type('text/plain'); // set content type as plain text
-  res.send(ml6);   // return the Python code
+  res.send(ml1);   // return the Python code
 });
 app.get('/ml2', (req, res) => {
   res.type('text/plain'); // set content type as plain text
-  res.send(ml7);   // return the Python code
+  res.send(ml2);   // return the Python code
 });
 app.get('/ml3', (req, res) => {
   res.type('text/plain'); // set content type as plain text
-  res.send(ml8);   // return the Python code
+  res.send(ml3);   // return the Python code
 });
 app.get('/ml4', (req, res) => {
   res.type('text/plain'); // set content type as plain text
-  res.send(ml9);
+  res.send(ml4);
+});
 app.get('/ml6', (req, res) => {
   res.type('text/plain'); // set content type as plain text
   res.send(ml6);   // return the Python code
